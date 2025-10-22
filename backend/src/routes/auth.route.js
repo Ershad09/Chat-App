@@ -1,21 +1,15 @@
 import express from 'express';
+import { login, logout, signup } from '../controller/auth.controller.js';
 const router = express.Router();
 
-console.log('Auth router loaded ✅');
 
-router.get('/signup', (req, res) => {
-  console.log('Signup route hit!');
-  res.send('Signup route working!');
-});
+// ============== auth Routes =============
 
-router.get('/login', (req, res) => {
-  console.log('Login route hit!');
-  res.send('Login route working!');
-});
 
-router.get('/logout', (req, res) => {
-  console.log('Logout route hit!');
-  res.send('Logout route working!');
-});
+router.get('/signup', signup );
+
+router.get('/login', login );
+
+router.get('/logout', logout );
 
 export default router;
