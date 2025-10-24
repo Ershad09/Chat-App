@@ -6,10 +6,10 @@ const router = express.Router();
 // ============== auth Routes =============
 
 
-router.get('/signup', signup );
+router.get('/signup', signup );   // signup 
 
-router.get('/login', login );
+router.get('/login', login );     // login
 
-router.get('/logout', logout );
+router.get('/logout', logout );   // logout  
 
 export default router;
