@@ -5,19 +5,16 @@ dotenv.config();
 
 // ======== Internal Modules =========
 import authRouter from "./routes/auth.route.js";
-import messageRouter from "./routes/message.route.js";
 import { connectDB } from "./lib/db.js";
 
 const app = express();
-
+  
 const PORT = 3000;
 
-app.use(express.json());  //read JSON data from the request body.
+app.use(express.json()); //read JSON data from the request body.
 
 // ============ router ==================
-app.use("/api/auth", authRouter); // Auth routes
-app.use("/api/auth", messageRouter); // Message routes
-
+app.use("/api/auth", authRouter); // Auth router
 
 connectDB();
 
