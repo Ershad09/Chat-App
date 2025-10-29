@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import User from "../model/user.model.js";
 import { hashPassword } from "../utils/hashPassword.js";
 import sendToken from "../utils/jwt.js";
@@ -10,13 +11,13 @@ export const signup = async (req, res) => {
     // check all fields
     if (!userName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
-    } 
+    }
 
     // check if email already exist
     const user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ message: "Email already exists" });
-    } 
+    }
 
     // check password length
     if (password.length < 8) {
@@ -53,14 +54,13 @@ export const signup = async (req, res) => {
       res.status(400).json({ message: "invalid user data" });
     }
   } catch (error) {
-     console.log("Error in signup controller:", error);
+    console.log("Error in signup controller:", error);
 
     // Handle Mongoose validation errors
     if (error.name === "ValidationError") {
-
       // Check if it's an email validation error
       if (error.errors.email) {
-        return res.status(400).json({ message :error.errors.email.message });
+        return res.status(400).json({ message: error.errors.email.message });
       }
       // Handle other validation errors
       return res.status(400).json({ message: error.message });
@@ -69,17 +69,52 @@ export const signup = async (req, res) => {
     // Handle other errors
     res.status(500).json({ message: "Internal server error" });
   }
-  }
-
-
+};
 
 // ======================= login =======================================
-export const login = (req, res) => {
-  res.send("login");
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // check if email exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    //send token
+    sendToken(user._id, res);
+
+    res.status(200).json({
+      message: "Login Successful",
+      _id: user._id,
+      userName: user.userName,
+      email: user.email,
+      profilePi: user.profilePic,
+    });
+  } catch (error) {
+    console.log("Error in login controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 // ======================= logout =========================================
 export const logout = (req, res) => {
-  res.send("logout");
-};
+  try {
+    //clear cookie
+    res.cookie("token", "", { maxAge: 0 });
 
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error logging out",
+    });
+  }
+};
