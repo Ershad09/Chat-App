@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../model/user.model.js";
 import { hashPassword } from "../utils/hashPassword.js";
 import sendToken from "../utils/jwt.js";
+import cloudinary from "../lib/cloudinary.js";
 
 // =================== signup ======================================
 export const signup = async (req, res) => {
@@ -108,7 +109,7 @@ export const login = async (req, res) => {
 export const logout = (req, res) => {
   try {
     //clear cookie
-    res.cookie("token", "", { maxAge: 0 });
+    res.cookie("jwt", "", { maxAge: 0 });
 
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
@@ -118,3 +119,64 @@ export const logout = (req, res) => {
     });
   }
 };
+
+// ====================== Update Profile =====================
+
+//
+
+export const updateProfile = async (req, res) => {
+  
+  try {
+    const {profilePic} = req.body;
+
+    if(!profilePic){
+      return res.status.json({message: "Profile pic is required"});
+    }
+
+    // validate base64 formate
+    if(!profilePic.startsWith('data:image')){
+      return res.status(400).json({message:"Invalid image format"})
+    }
+
+    
+
+    // upload new img to cloudinary
+    const uploadResponse = await cloudinary.uploader.upload(profilePic, {
+      folder: 'profile_pictures',
+      transformation: [
+        {width: 500, height: 500, crop: 'fill'},
+        {quality : 'auto'}
+      ],
+      resource_type: 'image',
+      allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    });
+
+    const userId = req.user._id;
+
+    //update user in database
+    const updateUser = await User.findByIdAndUpdate(userId,
+      {
+        profilePic: uploadResponse.secure_url
+      },
+      {
+        new:true,
+        select: '-password'
+      }
+    )
+
+    if(!updateUser){
+      return res.status(404).json({message: "User not found"});
+    }
+
+
+    res.status(200).json({
+      message: "ProfilePic updated successfully",
+      user: updateUser
+    })
+  } catch (error) {
+     console.error('Profile update error:', error);
+       return res.status(500).json({
+      message: "Error updating ProfilePic",
+    });
+  }
+}; 
