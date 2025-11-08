@@ -1,17 +1,19 @@
 // ======= External modules ===========
-import express from "express";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import express from "express";
 dotenv.config();
 
 // ======== Internal Modules =========
-import authRouter from "./routes/auth.route.js";
 import { connectDB } from "./lib/db.js";
+import authRouter from "./routes/auth.route.js";
 
 const app = express();
-  
+
 const PORT = 3000;
 
 app.use(express.json()); //read JSON data from the request body.
+app.use(cookieParser());
 
 // ============ router ==================
 app.use("/api/auth", authRouter); // Auth router
