@@ -1,10 +1,10 @@
-import jwt, { decode } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import User from "../model/user.model.js";
 
 export const protect = async (req, res, next) => {
   try {
     // get token from cookies
-    const token = req.cookies.token;
+    const token = req.cookies.jwt;
 
     if (!token) {
       return res
@@ -20,7 +20,7 @@ export const protect = async (req, res, next) => {
     }
 
     // find user
-    const user = await User.findById(decode.userId).select("-password");
+    const user = await User.findById(decoded.userId).select("-password");
 
     if (!user) {
       return res.status(401).json({ message: "Unauthorized - Invalid Token" });
@@ -30,7 +30,7 @@ export const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error(error);
-    return res.status(401).json({ message: "server error" });
+    console.error("Error in protect middleware:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
