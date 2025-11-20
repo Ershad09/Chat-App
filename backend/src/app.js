@@ -7,6 +7,7 @@ dotenv.config();
 // ======== Internal Modules =========
 import { connectDB } from "./lib/db.js";
 import authRouter from "./routes/auth.route.js";
+import messageRouter from "./routes/message.route.js";
 
 const app = express();
 
@@ -15,8 +16,9 @@ const PORT = 3000;
 app.use(express.json()); //read JSON data from the request body.
 app.use(cookieParser());
 
-// ============ router ==================
-app.use("/api/auth", authRouter); // Auth router
+// ============ routes ==================
+app.use("/api/auth", authRouter); // Auth route
+app.use("/api/messages", messageRouter); // Message route
 
 connectDB();
 
