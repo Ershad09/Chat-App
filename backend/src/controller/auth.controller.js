@@ -42,7 +42,7 @@ export const signup = async (req, res) => {
       await newUser.save();
 
       // send jwt token
-      sendToken(newUser._id, res);
+      const token = sendToken(newUser._id, res);
 
       res.status(201).json({
         message: "new user created",
@@ -50,6 +50,7 @@ export const signup = async (req, res) => {
         userName: newUser.userName,
         email: newUser.email,
         profilePic: newUser.profilePic,
+        token,
       });
     } else {
       res.status(400).json({ message: "invalid user data" });
@@ -90,7 +91,7 @@ export const login = async (req, res) => {
     }
 
     //send token
-    sendToken(user._id, res);
+    const token = sendToken(user._id, res);
 
     res.status(200).json({
       message: "Login Successful",
@@ -98,6 +99,7 @@ export const login = async (req, res) => {
       userName: user.userName,
       email: user.email,
       profilePi: user.profilePic,
+      token,
     });
   } catch (error) {
     console.log("Error in login controller:", error);
@@ -121,62 +123,56 @@ export const logout = (req, res) => {
 };
 
 // ====================== Update Profile =====================
-
-//
-
 export const updateProfile = async (req, res) => {
-  
   try {
-    const {profilePic} = req.body;
+    const { profilePic } = req.body;
 
-    if(!profilePic){
-      return res.status.json({message: "Profile pic is required"});
+    if (!profilePic) {
+      return res.status.json({ message: "Profile pic is required" });
     }
 
     // validate base64 formate
-    if(!profilePic.startsWith('data:image')){
-      return res.status(400).json({message:"Invalid image format"})
+    if (!profilePic.startsWith("data:image")) {
+      return res.status(400).json({ message: "Invalid image format" });
     }
-
-    
 
     // upload new img to cloudinary
     const uploadResponse = await cloudinary.uploader.upload(profilePic, {
-      folder: 'profile_pictures',
+      folder: "profile_pictures",
       transformation: [
-        {width: 500, height: 500, crop: 'fill'},
-        {quality : 'auto'}
+        { width: 500, height: 500, crop: "fill" },
+        { quality: "auto" },
       ],
-      resource_type: 'image',
-      allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+      resource_type: "image",
+      allowed_formats: ["jpg", "png", "jpeg", "webp"],
     });
 
     const userId = req.user._id;
 
     //update user in database
-    const updateUser = await User.findByIdAndUpdate(userId,
+    const updateUser = await User.findByIdAndUpdate(
+      userId,
       {
-        profilePic: uploadResponse.secure_url
+        profilePic: uploadResponse.secure_url,
       },
       {
-        new:true,
-        select: '-password'
+        new: true,
+        select: "-password",
       }
-    )
+    );
 
-    if(!updateUser){
-      return res.status(404).json({message: "User not found"});
+    if (!updateUser) {
+      return res.status(404).json({ message: "User not found" });
     }
-
 
     res.status(200).json({
       message: "ProfilePic updated successfully",
-      user: updateUser
-    })
+      user: updateUser,
+    });
   } catch (error) {
-     console.error('Profile update error:', error);
-       return res.status(500).json({
+    console.error("Profile update error:", error);
+    return res.status(500).json({
       message: "Error updating ProfilePic",
     });
   }
-}; 
+};
